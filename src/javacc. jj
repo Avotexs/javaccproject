@@ -1,0 +1,128 @@
+PARSER_BEGIN(DatabaseGenerator)
+
+import java.util.*;
+
+public class DatabaseGenerator {
+
+    public static void main(String[] args) {
+       
+        String input = "CREATE TABLE employees (id INT, name VARCHAR(255), PRIMARY KEY(id));";
+        DatabaseGenerator parser = new DatabaseGenerator(System.in);
+        try {
+            parser.parse(input);
+        } catch (ParseException e) {
+            System.out.println("Erreur lors de l'analyse de la description.");
+        }
+    }
+
+    class Table {
+        String name;
+        List<Column> columns = new ArrayList<>();
+        List<String> constraints = new ArrayList<>();
+
+        Table(String name) {
+            this.name = name;
+        }
+
+        void addColumn(Column column) {
+            columns.add(column);
+        }
+
+        void addConstraint(String constraint) {
+            constraints.add(constraint);
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sql = new StringBuilder("CREATE TABLE " + name + " (\n");
+            for (Column col : columns) {
+                sql.append("  " + col + ",\n");
+            }
+            for (String constraint : constraints) {
+                sql.append("  " + constraint + ",\n");
+            }
+            sql.append(");");
+            return sql.toString();
+        }
+    }
+
+    class Column {
+        String name;
+        String type;
+
+        Column(String name, String type) {
+            this.name = name;
+            this.type = type;
+        }
+
+        @Override
+        public String toString() {
+            return name + " " + type;
+        }
+    }
+
+    public void generateSQL(String input) {
+        System.out.println("Génération du script SQL...");
+    }
+}
+
+PARSER_END(DatabaseGenerator)
+
+
+void description() :
+{}
+{
+    (tableDefinition())*
+}
+
+void tableDefinition() :
+{}
+{
+    "CREATE TABLE" identifier() "(" columnDefinitions() constraintDefinitions() ")"
+}
+
+void columnDefinitions() :
+{}
+{
+    (columnDefinition())*
+}
+
+void columnDefinition() :
+{}
+{
+    identifier() columnType() [constraint()]
+}
+
+void columnType() :
+{}
+{
+    "INT" | "VARCHAR" | "DATE" 
+}
+
+
+void constraintDefinitions() :
+{}
+{
+    (constraint())*
+}
+
+void constraint() :
+{}
+{
+    "PRIMARY KEY" identifier()
+  | "UNIQUE" identifier()
+  | "FOREIGN KEY" identifier() "REFERENCES" identifier()
+}
+
+
+void identifier() :
+{}
+{
+    <IDENTIFIER>
+}
+
+
+TOKEN : 
+{
+    <IDENTIFIER:  (<LETTER>)+ ( <LETTER> | <DIGIT> | "_")* >
+}
